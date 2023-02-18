@@ -26,26 +26,29 @@ static void _ht_half_table(ht_t *table);
  * Initialize a hashtable struct
  * 
  * @return 0 on success
- *         1 on failure (memory allocation fault)
+ *         1 on failure (memory allocation failure)
  *         
  */
 int ht_init(ht_t **table)
 {
-    (*table) = malloc(sizeof(**table));
+    *table = malloc(sizeof(**table));
+    
+    if (!*table) {
+        return 1; // Unable to malloc memory
+    }
+    
     (*table)->arraySize = HT_INITIAL_SIZE;
     (*table)->currentLoadFactor = 0;
     (*table)->numberOfItemsInTable = 0;
     (*table)->numberOfSlotsUsed = 0;
     (*table)->table = malloc(sizeof(*((*table)->table)) * (*table)->arraySize);
 
-    if ((*table)->table == NULL)
-    {
+    if ((*table)->table == NULL) {
         return 1;    // Unable to malloc memory
     }
     
-    for (int i = 0; i < (*table)->arraySize; i++)
-    {
-        (*table)->table[i] = NULL;//malloc(sizeof(ht_entry_t *));
+    for (int i = 0; i < (*table)->arraySize; i++) {
+        (*table)->table[i] = NULL;
     }
     return 0;
 }
