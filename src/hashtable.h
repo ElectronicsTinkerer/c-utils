@@ -8,6 +8,9 @@
  * 2023-02-09: Changed to macro cast wrappers
  * 2023-02-10: Fixed "definitely" and "indirectly" lost
  *             memory on table resize (valgrind)
+ * 2023-02-17: Added __HT_HT_C #undef capability to allow
+ *             for multiple hashtable generic types in
+ *             the same compilation unit.
  */
 
 #ifndef HT_H
@@ -91,37 +94,37 @@ typedef struct HT_ENTRY_DATA_T
 
 
 // "Macro Generic" templating wrappers
-void HT_GLUE(HT_DATA_T, _ht_put)(ht_t *t, unsigned long k, HT_DATA_T *v)
+static inline void HT_GLUE(HT_DATA_T, _ht_put)(ht_t *t, unsigned long k, HT_DATA_T *v)
 {
     __ht_put(t, k, (void*)v);
 }
 
-void HT_GLUE(HT_DATA_T, _ht_sput)(ht_t *t, char *k, HT_DATA_T *v)
+static inline void HT_GLUE(HT_DATA_T, _ht_sput)(ht_t *t, char *k, HT_DATA_T *v)
 {
     __ht_sput(t, k, (void*)v);
 }
 
-HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_get)(ht_t *t, unsigned long k)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_get)(ht_t *t, unsigned long k)
 {
     return (HT_DATA_T*)__ht_get(t, k);
 }
 
-HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_sget)(ht_t *t, char *k)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_sget)(ht_t *t, char *k)
 {
     return (HT_DATA_T*)__ht_sget(t, k);
 }
 
-HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_remove)(ht_t *t, unsigned long k)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_remove)(ht_t *t, unsigned long k)
 {
     return (HT_DATA_T*)__ht_remove(t, k);
 }
 
-HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_sremove)(ht_t *t, char *k)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_sremove)(ht_t *t, char *k)
 {
     return (HT_DATA_T*)__ht_sremove(t, k);
 }
 
-HT_ENTRY_DATA_T *HT_GLUE(HT_DATA_T, _ht_iterator_next)(ht_itr_t *itr)
+static inline HT_ENTRY_DATA_T *HT_GLUE(HT_DATA_T, _ht_iterator_next)(ht_itr_t *itr)
 {
     return (HT_ENTRY_DATA_T*)__ht_iterator_next(itr);
 }
@@ -129,6 +132,14 @@ HT_ENTRY_DATA_T *HT_GLUE(HT_DATA_T, _ht_iterator_next)(ht_itr_t *itr)
 
 #undef HT_DATA_T
 #undef HT_ENTRY_DATA_T
+
+// The programmer must undef this if multiple
+// hashtable types are to be defined within
+// the same compilation unit. This prevents
+// multiple definition warnings if multiple
+// header files include the hashtable within
+// the same unit with the same generic type.
+#define __HT_HT_C
 
 #endif
 
