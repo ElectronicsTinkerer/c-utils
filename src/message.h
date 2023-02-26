@@ -17,7 +17,7 @@ typedef enum msg_kind_t {
     M_DBUG
 } msg_kind_t;
 
-int pmsg(msg_kind_t, ssize_t, const char *, ...);
+int pmsg(msg_kind_t, const char*, ssize_t, const char *, ...);
 
 #endif
 
