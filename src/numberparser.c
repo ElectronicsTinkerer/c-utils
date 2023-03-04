@@ -69,7 +69,7 @@ NPError string_to_int(int *value, const char *string, int base)
 
 
 /**
- * Get an unsigned integer from a string, Base 10.
+ * Get an unsigned integer from a string.
  * Note: Maximum value is INT_MAX, not UINT_MAX
  * 
  * @param value The location to store the parsed number from the input string
@@ -91,8 +91,9 @@ NPError string_to_uint(int *value, const char *string, int base)
     return error; 
 }
 
+
 /**
- * Get a floating-point number from a string. Only base 10 allowed.
+ * Get a floating-point number from a string.
  * 
  * @param value The location to store the parsed number from the input string
  * @param string The string to parse for an double

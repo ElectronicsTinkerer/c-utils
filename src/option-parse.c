@@ -35,7 +35,8 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
             short_buf[1] = entry->short_name;
             strcpy(long_buf+2, entry->full_name);
 
-            if (entry->short_name != '\0' && strcmp(*argv, short_buf) == 0) {
+            if ((entry->short_name != '\0' && strcmp(*argv, short_buf) == 0) ||
+                (entry->full_name != NULL && strcmp(*argv, long_buf) == 0)) {
 
                 switch (entry->type) {
                 case OPT_EOL:
