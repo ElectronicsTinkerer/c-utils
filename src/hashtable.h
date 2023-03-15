@@ -11,6 +11,7 @@
  * 2023-02-17: Added __HT_HT_C #undef capability to allow
  *             for multiple hashtable generic types in
  *             the same compilation unit.
+ * 2023-03-14: Reduced HT_INITIAL_SIZE from 16 to 8
  */
 
 #ifndef HT_H
@@ -23,7 +24,7 @@
 #define HT_DEFAULT_MAX_POSITIVE_LOAD_FACTOR_VARIANCE 0.2
 #define HT_DEFAULT_MAX_NGATIVE_LOAD_FACTOR_VARIANCE 0.5
 #define HT_DEFAULT_LOAD_FACTOR 1.0
-#define HT_INITIAL_SIZE 16
+#define HT_INITIAL_SIZE 8
 
 #define _HT_GLUE(x, y) x##y
 #define HT_GLUE(x, y) _HT_GLUE(x, y)
