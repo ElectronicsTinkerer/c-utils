@@ -12,11 +12,13 @@
  *           data type is char* , define the macros as char* , not (char*)
  */
 
-#ifndef STACK_H
-#define STACK_H
-
 #include <stddef.h> // size_t
 #include <stdbool.h>
+#include <string.h> // memcpy()
+#include <stdlib.h>
+
+#ifndef STACK_H
+#define STACK_H
 
 #define STACK_DEFAULT_MAX_POSITIVE_LOAD_FACTOR_VARIANCE 0.2
 #define STACK_DEFAULT_MAX_NEGATIVE_LOAD_FACTOR_VARIANCE 0.5
@@ -27,28 +29,27 @@
 
 typedef struct _stack_t {
     float current_load_factor;             // Load factor
-    unsigned int number_of_items_in_table; // Number of actual items currently in the internal array
-    unsigned int array_size;               // Size of the internal array
-    void *table;                          // Internal array
+    size_t number_of_items_in_table;       // Number of actual items currently in the internal array
+    size_t array_size;                     // Size of the internal array
+    size_t min_array_size;
+    char *table;                           // Internal array
 } _stack_t;
 
-int __stack_init(_stack_t **stack, size_t element_size);
-void __stack_clear(_stack_t *stack, size_t element_size);
+bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size);
+bool __stack_clear(_stack_t *stack, size_t element_size);
 bool __stack_is_empty(_stack_t *stack);
-void __stack_destroy(_stack_t **stack, size_t element_size);
-void *__stack_peek(_stack_t *stack, size_t element_size);
-void *__stack_pop(_stack_t *stack, size_t element_size); // NOTE: TODO: stack pop needs to deallocate at the beginning of the function (not at the end) so that the returned pointer is still valid.
-void __stack_dup(_stack_t *stack, size_t element_size);
-void __stack_swap(_stack_t *stack, size_t element_size);
-void __stack_rot(_stack_t *stack, size_t element_size);
-void __stack_push(_stack_t *stack, size_t element_size, void *element);
+void __stack_destroy(_stack_t **stackcd);
+bool __stack_peek(_stack_t *stack, size_t element_size, void *element);
+bool __stack_peeki(_stack_t *stack, size_t element_size, void *element, size_t index);
+bool __stack_pop(_stack_t *stack, size_t element_size, void *element); // NOTE: TODO: stack pop needs to deallocate at the beginning of the function (not at the end) so that the returned pointer is still valid.
+bool __stack_drop(_stack_t *stack, size_t element_size);
+bool __stack_dup(_stack_t *stack, size_t element_size);
+bool __stack_swap(_stack_t *stack, size_t element_size);
+bool __stack_rot(_stack_t *stack, size_t element_size);
+bool __stack_push(_stack_t *stack, size_t element_size, void *element);
+size_t __stack_get_num_elements(_stack_t *stack);
 
 #endif
-
-#ifndef STACK_INITIAL_SIZE
-#define STACK_INITIAL_SIZE 8
-#endif
-
 
 // Now on to the "type generic weirdness"
 #ifndef __STACK_STACK_C
@@ -66,14 +67,14 @@ typedef struct __STACK_T {
 } __STACK_T;
 
 // Function prototypes
-static inline int STACK_GLUE(STACK_DATA_NAME, _stack_init)(__STACK_T **stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_init)(__STACK_T **stack, size_t initial_size)
 {
-    return __stack_init((_stack_t**)stack, sizeof(STACK_DATA_T));
+    return __stack_init((_stack_t**)stack, sizeof(STACK_DATA_T), initial_size);
 }
 
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_clear)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_clear)(__STACK_T *stack)
 {
-    __stack_clear((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_clear((_stack_t*)stack, sizeof(STACK_DATA_T));
 }
 
 static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_is_empty)(__STACK_T *stack)
@@ -81,46 +82,54 @@ static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_is_empty)(__STACK_T *stack
     return __stack_is_empty((_stack_t*)stack);
 }
 
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_destroy)(__STACK_T *stack)
+static inline void STACK_GLUE(STACK_DATA_NAME, _stack_destroy)(__STACK_T **stack)
 {
-    __stack_destroy((_stack_t**)stack, sizeof(STACK_DATA_T));
+    __stack_destroy((_stack_t**)stack);
 }
 
-static inline STACK_DATA_T STACK_GLUE(STACK_DATA_NAME, _stack_peek)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_peek)(__STACK_T *stack, STACK_DATA_T *element)
 {
-    return *(STACK_DATA_T *)__stack_peek((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_peek((_stack_t*)stack, sizeof(STACK_DATA_T), (void *)element);
 }
 
-static inline STACK_DATA_T STACK_GLUE(STACK_DATA_NAME, _stack_pop)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_peeki)(__STACK_T *stack, STACK_DATA_T *element, size_t index)
 {
-    return *(STACK_DATA_T *)__stack_pop((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_peeki((_stack_t*)stack, sizeof(STACK_DATA_T), (void *)element, index);
 }
 
-// Basically an alias for stack_pop but with no return value
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_drop)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_pop)(__STACK_T *stack, STACK_DATA_T *element)
 {
-    __stack_pop((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_pop((_stack_t*)stack, sizeof(STACK_DATA_T), (void *)element);
 }
 
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_dup)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_drop)(__STACK_T *stack)
 {
-    __stack_dup((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_drop((_stack_t*)stack, sizeof(STACK_DATA_T));
 }
 
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_swap)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_dup)(__STACK_T *stack)
 {
-    __stack_swap((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_dup((_stack_t*)stack, sizeof(STACK_DATA_T));
 }
 
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_rot)(__STACK_T *stack)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_swap)(__STACK_T *stack)
 {
-    __stack_rot((_stack_t*)stack, sizeof(STACK_DATA_T));
+    return __stack_swap((_stack_t*)stack, sizeof(STACK_DATA_T));
 }
 
-static inline void STACK_GLUE(STACK_DATA_NAME, _stack_push)(__STACK_T *stack, STACK_DATA_T element)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_rot)(__STACK_T *stack)
 {
-    __stack_push((_stack_t*)stack, sizeof(STACK_DATA_T), (void*)&element);
+    return __stack_rot((_stack_t*)stack, sizeof(STACK_DATA_T));
 }
 
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_push)(__STACK_T *stack, STACK_DATA_T element)
+{
+    return __stack_push((_stack_t*)stack, sizeof(STACK_DATA_T), (void*)&element);
+}
+
+static inline size_t STACK_GLUE(STACK_DATA_NAME, _stack_get_num_elements)(__STACK_T *stack)
+{
+    return __stack_get_num_elements((_stack_t*)stack);
+}
 #endif
 
