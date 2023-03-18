@@ -12,6 +12,17 @@
  *             for multiple hashtable generic types in
  *             the same compilation unit.
  * 2023-03-14: Reduced HT_INITIAL_SIZE from 16 to 8
+ * 2023-03-18: Refactor to add type checking for all 
+ *             functions
+ * 
+ * USAGE:
+ * Define HT_DATA_T as the data type to be stored in the hashtable structure.
+ * Define HT_DATA_NAME as the data name for the associated function calls.
+ * **NOTE**: Do not enclose the above macros in parens! For example, if the 
+ *           data type is char* , define the macros as char* , not (char*)
+ * **NOTE**: The hashtable internally stores pointers. For example, if HT_DATA_T
+ *           is defined as char, internally, the hash table would be storing
+ *           char*. This is different behavior than the Stack data structure.
  */
 
 #ifndef HT_H
@@ -20,11 +31,15 @@
 #include <string.h> // memcpy()
 #include <stdlib.h>
 #include <stddef.h> // NULL
+#include <stdbool.h>
 
 #define HT_DEFAULT_MAX_POSITIVE_LOAD_FACTOR_VARIANCE 0.2
 #define HT_DEFAULT_MAX_NGATIVE_LOAD_FACTOR_VARIANCE 0.5
 #define HT_DEFAULT_LOAD_FACTOR 1.0
 #define HT_INITIAL_SIZE 8
+
+typedef unsigned long ht_key_t;
+typedef size_t ht_index_t;
 
 #define _HT_GLUE(x, y) x##y
 #define HT_GLUE(x, y) _HT_GLUE(x, y)
@@ -32,16 +47,16 @@
 typedef struct ht_t
 {
     float currentLoadFactor;            // Load factor
-    unsigned int numberOfItemsInTable;  // Number of items in the table
-    unsigned int numberOfSlotsUsed;     // Number of table slots that have had data in them ("dirty slots")
-    unsigned int arraySize;             // Current size of array to store elements
-    struct ht_entry_t **table;   // The table in which to store the elements
+    ht_index_t numberOfItemsInTable;    // Number of items in the table
+    ht_index_t numberOfSlotsUsed;       // Number of table slots that have had data in them ("dirty slots")
+    ht_index_t arraySize;               // Current size of array to store elements
+    struct ht_entry_t **table;          // The table in which to store the elements
 } ht_t;
 
 typedef struct ht_entry_t
 {
     struct ht_entry_t *next;     // Using collision lists, this points to the next node in the list
-    unsigned long key;
+    ht_key_t key;
     void *value;
 } ht_entry_t;
 
@@ -57,82 +72,166 @@ typedef struct ht_itr_t
 
 
 // Function Prototypes
-int ht_init(ht_t **table);
-void ht_clear(ht_t *table);
-void __ht_put(ht_t *table, unsigned long key, void *value);
+bool __ht_init(ht_t **table);
+void __ht_clear(ht_t *table);
+void __ht_put(ht_t *table, ht_key_t key, void *value);
 void __ht_sput(ht_t *table, char *key, void *value);
-void *__ht_get(ht_t *table, unsigned long key);
+void *__ht_get(ht_t *table, ht_key_t key);
 void *__ht_sget(ht_t *table, char *key);
-void *__ht_remove(ht_t *table, unsigned long key);
+void *__ht_remove(ht_t *table, ht_key_t key);
 void *__ht_sremove(ht_t *table, char *key);
-unsigned int ht_contains_key(ht_t *table, unsigned long key);
-unsigned int ht_contains_skey(ht_t *table, char *key);
-void ht_destroy(ht_t **table);
-unsigned int ht_is_empty(ht_t *table);
-unsigned int ht_get_num_elements(ht_t *table);
-unsigned long ht_hash_string(const char *string);
+bool __ht_contains_key(ht_t *table, ht_key_t key);
+bool __ht_contains_skey(ht_t *table, char *key);
+void __ht_destroy(ht_t **table);
+bool __ht_is_empty(ht_t *table);
+ht_index_t __ht_get_num_elements(ht_t *table);
+ht_key_t __ht_hash_string(const char *string);
 
-ht_itr_t *ht_create_iterator(ht_t *table);
-int ht_iterator_has_next(ht_itr_t *itr);
+ht_itr_t *__ht_create_iterator(ht_t *table);
+bool __ht_iterator_has_next(ht_itr_t *itr);
 ht_entry_t *__ht_iterator_next(ht_itr_t *itr);
-void ht_iterator_free(ht_itr_t **itr);
+void __ht_iterator_free(ht_itr_t **itr);
 
 #endif
 
 #ifndef __HT_HT_C
 
-#ifndef HT_DATA_T
-# error "Must define HT_DATA_T before including hashtable.h"
+#if !defined(HT_DATA_T) || !defined(HT_DATA_NAME)
+# error "Must define HT_DATA_T and HT_DATA_NAME before including hashtable.h"
 #endif
 
-#define HT_ENTRY_DATA_T HT_GLUE(HT_DATA_T, _ht_entry_t)
-typedef struct HT_ENTRY_DATA_T
+#define HT_T HT_GLUE(HT_DATA_NAME, _ht_t)
+#define HT_ENTRY_T HT_GLUE(HT_DATA_NAME, _ht_entry_t)
+#define HT_ITR_T HT_GLUE(HT_DATA_NAME, _ht_itr_t)
+
+// MAINTAINERS NOTE: KEEP THESE STRUCTS THE SAME AS THE ABOVE
+// NON-CAPS NAMED STRUCTS! This will ensure that casting works
+// as expected!
+typedef struct HT_T
+{
+    float currentLoadFactor;            // Load factor
+    ht_index_t numberOfItemsInTable;    // Number of items in the table
+    ht_index_t numberOfSlotsUsed;       // Number of table slots that have had data in them ("dirty slots")
+    ht_index_t arraySize;               // Current size of array to store elements
+    struct HT_ENTRY_T **table;          // The table in which to store the elements
+} HT_T;
+
+typedef struct HT_ENTRY_T
 {
     struct ht_entry_t *next;     // Using collision lists, this points to the next node in the list
-    unsigned long key;
+    ht_key_t key;
     HT_DATA_T *value;
-} HT_ENTRY_DATA_T;
+} HT_ENTRY_T;
+
+typedef struct HT_ITR_T
+{
+    int currentTableIndex;
+    int foundElements;
+    int totalElements;
+    int tableSize;
+    struct HT_ENTRY_T *currentNode;
+    struct HT_ENTRY_T **iteratorTable;
+} HT_ITR_T;
+
 
 
 // "Macro Generic" templating wrappers
-static inline void HT_GLUE(HT_DATA_T, _ht_put)(ht_t *t, unsigned long k, HT_DATA_T *v)
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_init)(HT_T **t)
 {
-    __ht_put(t, k, (void*)v);
+    return __ht_init((ht_t**)t);
 }
 
-static inline void HT_GLUE(HT_DATA_T, _ht_sput)(ht_t *t, char *k, HT_DATA_T *v)
+static inline void HT_GLUE(HT_DATA_NAME, _ht_clear)(HT_T *t)
 {
-    __ht_sput(t, k, (void*)v);
+    __ht_clear((ht_t*)t);
 }
 
-static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_get)(ht_t *t, unsigned long k)
+static inline void HT_GLUE(HT_DATA_NAME, _ht_put)(HT_T *t, ht_key_t k, HT_DATA_T *v)
 {
-    return (HT_DATA_T*)__ht_get(t, k);
+    __ht_put((ht_t*)t, k, (void*)v);
 }
 
-static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_sget)(ht_t *t, char *k)
+static inline void HT_GLUE(HT_DATA_NAME, _ht_sput)(HT_T *t, char *k, HT_DATA_T *v)
 {
-    return (HT_DATA_T*)__ht_sget(t, k);
+    __ht_sput((ht_t*)t, k, (void*)v);
 }
 
-static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_remove)(ht_t *t, unsigned long k)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_NAME, _ht_get)(HT_T *t, ht_key_t k)
 {
-    return (HT_DATA_T*)__ht_remove(t, k);
+    return (HT_DATA_T*)__ht_get((ht_t*)t, k);
 }
 
-static inline HT_DATA_T *HT_GLUE(HT_DATA_T, _ht_sremove)(ht_t *t, char *k)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_NAME, _ht_sget)(HT_T *t, char *k)
 {
-    return (HT_DATA_T*)__ht_sremove(t, k);
+    return (HT_DATA_T*)__ht_sget((ht_t*)t, k);
 }
 
-static inline HT_ENTRY_DATA_T *HT_GLUE(HT_DATA_T, _ht_iterator_next)(ht_itr_t *itr)
+static inline HT_DATA_T *HT_GLUE(HT_DATA_NAME, _ht_remove)(HT_T *t, ht_key_t k)
 {
-    return (HT_ENTRY_DATA_T*)__ht_iterator_next(itr);
+    return (HT_DATA_T*)__ht_remove((ht_t*)t, k);
+}
+
+static inline HT_DATA_T *HT_GLUE(HT_DATA_NAME, _ht_sremove)(HT_T *t, char *k)
+{
+    return (HT_DATA_T*)__ht_sremove((ht_t*)t, k);
+}
+
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_contains_key)(HT_T *t, ht_key_t k)
+{
+    return __ht_contains_key((ht_t*)t, k);
+}
+
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_contains_skey)(HT_T *t, char *k)
+{
+    return __ht_contains_skey((ht_t*)t, k);
+}
+
+static inline void HT_GLUE(HT_DATA_NAME, _ht_destroy)(HT_T **t)
+{
+    __ht_destroy((ht_t**)t);
+}
+
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_is_empty)(HT_T *t)
+{
+    return __ht_is_empty((ht_t*)t);
+}
+
+static inline ht_index_t HT_GLUE(HT_DATA_NAME, _ht_get_num_elements)(HT_T *t)
+{
+    return __ht_get_num_elements((ht_t*)t);
+}
+
+static inline ht_key_t  HT_GLUE(HT_DATA_NAME, _ht_hash_string)(const char *string)
+{
+    return __ht_hash_string(string);
+}
+
+static inline HT_ITR_T *HT_GLUE(HT_DATA_NAME, _ht_create_iterator)(HT_T *t)
+{
+    return (HT_ITR_T*)__ht_create_iterator((ht_t*)t);
+}
+
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_iterator_has_next)(HT_ITR_T *itr)
+{
+    return __ht_iterator_has_next((ht_itr_t*)itr);
+}
+
+static inline HT_ENTRY_T *HT_GLUE(HT_DATA_NAME, _ht_iterator_next)(HT_ITR_T *itr)
+{
+    return (HT_ENTRY_T*)__ht_iterator_next((ht_itr_t*)itr);
+}
+
+static inline void HT_GLUE(HT_DATA_NAME, _ht_iterator_free)(HT_ITR_T **itr)
+{
+    __ht_iterator_free((ht_itr_t**)itr);
 }
 
 
 #undef HT_DATA_T
-#undef HT_ENTRY_DATA_T
+#undef HT_DATA_NAME
+#undef HT_ENTRY_T
+#undef HT_T
+#undef HT_ITR_T
 
 // The programmer must undef this if multiple
 // hashtable types are to be defined within
