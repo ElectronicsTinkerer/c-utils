@@ -401,7 +401,7 @@ unsigned int ht_is_empty(ht_t *table)
 {
     if (table != NULL)
     {
-        return (table->arraySize) == 0;
+        return (table->arraySize) == 0; // FIXME: should this be numberOfItemsInTable ??
     }
     return 0;
 }
