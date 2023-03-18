@@ -38,10 +38,10 @@ typedef struct _stack_t {
 bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size);
 bool __stack_clear(_stack_t *stack, size_t element_size);
 bool __stack_is_empty(_stack_t *stack);
-void __stack_destroy(_stack_t **stackcd);
+void __stack_destroy(_stack_t **stack);
 bool __stack_peek(_stack_t *stack, size_t element_size, void *element);
 bool __stack_peeki(_stack_t *stack, size_t element_size, void *element, size_t index);
-bool __stack_pop(_stack_t *stack, size_t element_size, void *element); // NOTE: TODO: stack pop needs to deallocate at the beginning of the function (not at the end) so that the returned pointer is still valid.
+bool __stack_pop(_stack_t *stack, size_t element_size, void *element);
 bool __stack_drop(_stack_t *stack, size_t element_size);
 bool __stack_dup(_stack_t *stack, size_t element_size);
 bool __stack_swap(_stack_t *stack, size_t element_size);
@@ -58,7 +58,7 @@ size_t __stack_get_num_elements(_stack_t *stack);
 # error "Must define both STACK_DATA_NAME and STACK_DATA_T before including stack.h"
 #endif
 
-#define __STACK_T _STACK_GLUE(STACK_DATA_NAME, _stack_t)
+#define __STACK_T STACK_GLUE(STACK_DATA_NAME, _stack_t)
 typedef struct __STACK_T {
     float current_load_factor;             // Load factor
     unsigned int number_of_items_in_table; // Number of actual items currently in the internal array
@@ -131,5 +131,6 @@ static inline size_t STACK_GLUE(STACK_DATA_NAME, _stack_get_num_elements)(__STAC
 {
     return __stack_get_num_elements((_stack_t*)stack);
 }
+
 #endif
 
