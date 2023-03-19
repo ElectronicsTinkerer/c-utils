@@ -4,6 +4,10 @@
  *
  * Updates:
  * 2023-03-16: Initial creation
+ * 2023-03-17: Complete initial code base
+ * 2023-03-18: Change status return to use false
+ *             for the "no error" success condition
+ *             and true for "error"
  * 
  * USAGE:
  * Define STACK_DATA_T as the data type to be stored in the stack structure.
