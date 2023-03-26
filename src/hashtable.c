@@ -10,6 +10,7 @@
  *             memory on table resize (valgrind)
  * 2023-03-18: Refactor to add type checking for all 
  *             functions
+ * 2023-03-18: Add return status value to put() and sput()
  */
 
 #define __HT_HT_C
@@ -90,69 +91,75 @@ void __ht_clear(ht_t *table)
  * @param table The HashTable to be operated upon
  * @param key The key associated with the provided value
  * @param value The value to be associated with the key
+ * @return true on failure, false on success
  */
-void __ht_put(ht_t *table, ht_key_t key, void *value)
+bool __ht_put(ht_t *table, ht_key_t key, void *value)
 {
-    if (table != NULL)
-    {
-        ht_index_t pointer = _ht_compute_index(table, key);
+    if (table == NULL) {
+        return true;
+    }
 
-        ht_entry_t *item = malloc(sizeof(*item));
+    ht_index_t pointer = _ht_compute_index(table, key);
+
+    ht_entry_t *item = malloc(sizeof(*item));
+    if (!item) {
+        return true;
+    }
         
-        item->next = NULL;
-        item->value = value;
-        item->key = key;
+    item->next = NULL;
+    item->value = value;
+    item->key = key;
 
-        // If this location in the table is empty, just add the node
-        if (table->table[pointer] == NULL)
+    // If this location in the table is empty, just add the node
+    if (table->table[pointer] == NULL)
+    {
+        table->table[pointer] = item;
+        table->numberOfSlotsUsed++;
+    }
+    else
+    {
+        ht_entry_t *node = table->table[pointer];
+        int done = 0;
+        while (node != NULL && !done)
         {
-            table->table[pointer] = item;
-            table->numberOfSlotsUsed++;
-        }
-        else
-        {
-            ht_entry_t *node = table->table[pointer];
-            int done = 0;
-            while (node != NULL && !done)
+            if ((item->key) > (node->key) && node->next == NULL)
             {
-                if ((item->key) > (node->key) && node->next == NULL)
-                {
-                    node->next = item;
-                    done = 1;
-                }
-                else if (node->next != NULL && (item->key) < (node->next->key) && (item->key) > (node->key))
-                {
-                    item->next = node->next;
-                    node->next = item;
-                    done = 1;
-                }
-                else if (item->key < node->key)
-                {
-                    item->next = node;
-                    table->table[pointer] = item;
-                    done = 1;
-                }
-                else if (item->key == node->key) // Item is the same as the node
-                {
-                    node->value = item->value;
-                    free(item);
-                    table->numberOfItemsInTable--; // Cancel out addition at end of function
-                    done = 1;
-                }
-                node = node->next;
+                node->next = item;
+                done = 1;
             }
-        }
-
-        // Update the number of items in the table and current load factor
-        table->numberOfItemsInTable++;
-        table->currentLoadFactor = _ht_get_load_factor(table);
-
-        // Expand the table if needed
-        if (table->currentLoadFactor - HT_DEFAULT_MAX_POSITIVE_LOAD_FACTOR_VARIANCE > HT_DEFAULT_LOAD_FACTOR)
-        {
-            _ht_double_table(table);
+            else if (node->next != NULL && (item->key) < (node->next->key) && (item->key) > (node->key))
+            {
+                item->next = node->next;
+                node->next = item;
+                done = 1;
+            }
+            else if (item->key < node->key)
+            {
+                item->next = node;
+                table->table[pointer] = item;
+                done = 1;
+            }
+            else if (item->key == node->key) // Item is the same as the node
+            {
+                node->value = item->value;
+                free(item);
+                table->numberOfItemsInTable--; // Cancel out addition at end of function
+                done = 1;
+            }
+            node = node->next;
         }
     }
+
+    // Update the number of items in the table and current load factor
+    table->numberOfItemsInTable++;
+    table->currentLoadFactor = _ht_get_load_factor(table);
+
+    // Expand the table if needed
+    if (table->currentLoadFactor - HT_DEFAULT_MAX_POSITIVE_LOAD_FACTOR_VARIANCE > HT_DEFAULT_LOAD_FACTOR)
+    {
+        _ht_double_table(table);
+    }
+    return false; // Success
 }
 
 
@@ -163,14 +170,16 @@ void __ht_put(ht_t *table, ht_key_t key, void *value)
  * @param table The HashTable to be operated upon
  * @param key The key associated with the provided value
  * @param value The value to be associated with the key
+ * @return true on failure, false on success
  */
-void __ht_sput(ht_t *table, char *key, void *value)
+bool __ht_sput(ht_t *table, char *key, void *value)
 {
     if (table != NULL && key != NULL)
     {
         ht_key_t keyi = __ht_hash_string(key);
-        __ht_put(table, keyi, value);
+        return __ht_put(table, keyi, value);
     }
+    return true;
 }
 
 
