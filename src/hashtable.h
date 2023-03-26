@@ -13,7 +13,8 @@
  *             the same compilation unit.
  * 2023-03-14: Reduced HT_INITIAL_SIZE from 16 to 8
  * 2023-03-18: Refactor to add type checking for all 
- *             functions
+ *             functions.
+ *             Add return status value to put() and sput()
  * 
  * USAGE:
  * Define HT_DATA_T as the data type to be stored in the hashtable structure.
@@ -74,8 +75,8 @@ typedef struct ht_itr_t
 // Function Prototypes
 bool __ht_init(ht_t **table);
 void __ht_clear(ht_t *table);
-void __ht_put(ht_t *table, ht_key_t key, void *value);
-void __ht_sput(ht_t *table, char *key, void *value);
+bool __ht_put(ht_t *table, ht_key_t key, void *value);
+bool __ht_sput(ht_t *table, char *key, void *value);
 void *__ht_get(ht_t *table, ht_key_t key);
 void *__ht_sget(ht_t *table, char *key);
 void *__ht_remove(ht_t *table, ht_key_t key);
@@ -146,14 +147,14 @@ static inline void HT_GLUE(HT_DATA_NAME, _ht_clear)(HT_T *t)
     __ht_clear((ht_t*)t);
 }
 
-static inline void HT_GLUE(HT_DATA_NAME, _ht_put)(HT_T *t, ht_key_t k, HT_DATA_T *v)
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_put)(HT_T *t, ht_key_t k, HT_DATA_T *v)
 {
-    __ht_put((ht_t*)t, k, (void*)v);
+    return __ht_put((ht_t*)t, k, (void*)v);
 }
 
-static inline void HT_GLUE(HT_DATA_NAME, _ht_sput)(HT_T *t, char *k, HT_DATA_T *v)
+static inline bool HT_GLUE(HT_DATA_NAME, _ht_sput)(HT_T *t, char *k, HT_DATA_T *v)
 {
-    __ht_sput((ht_t*)t, k, (void*)v);
+    return __ht_sput((ht_t*)t, k, (void*)v);
 }
 
 static inline HT_DATA_T *HT_GLUE(HT_DATA_NAME, _ht_get)(HT_T *t, ht_key_t k)
