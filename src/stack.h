@@ -8,6 +8,8 @@
  * 2023-03-18: Change status return to use false
  *             for the "no error" success condition
  *             and true for "error"
+ * 2023-03-25: Added #undef of datatype-specific
+ *             macros to end of header.
  * 
  * USAGE:
  * Define STACK_DATA_T as the data type to be stored in the stack structure.
@@ -101,6 +103,12 @@ static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_peeki)(__STACK_T *stack, S
     return __stack_peeki((_stack_t*)stack, sizeof(STACK_DATA_T), (void *)element, index);
 }
 
+// Alias for peek
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_top)(__STACK_T *stack, STACK_DATA_T *element)
+{
+    return __stack_peek((_stack_t*)stack, sizeof(STACK_DATA_T), (void *)element);
+}
+
 static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_pop)(__STACK_T *stack, STACK_DATA_T *element)
 {
     return __stack_pop((_stack_t*)stack, sizeof(STACK_DATA_T), (void *)element);
@@ -135,6 +143,10 @@ static inline size_t STACK_GLUE(STACK_DATA_NAME, _stack_get_num_elements)(__STAC
 {
     return __stack_get_num_elements((_stack_t*)stack);
 }
+
+#undef STACK_DATA_T
+#undef STACK_DATA_NAME
+#undef __STACK_T
 
 #endif
 
