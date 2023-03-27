@@ -4,6 +4,7 @@
  * 
  * Updates:
  * 2023-03-03: Created
+ * 2023-03-19: Fix sefgault on NULL *help_func
  */
 
 #include <stdio.h>
@@ -26,7 +27,7 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
         for (entry = entries; entry->type != OPT_EOL; ++entry) {
 
             // Check for help
-            if (strcmp(*argv, "--help") == 0) {
+            if (strcmp(*argv, "--help") == 0 && help_func) {
                 (help_func)();
                 return false;
             }
