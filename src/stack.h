@@ -10,6 +10,8 @@
  *             and true for "error"
  * 2023-03-25: Added #undef of datatype-specific
  *             macros to end of header.
+ * 2023-04-01: Add init param to prevent automatic
+ *             shrinking of the internal array
  * 
  * USAGE:
  * Define STACK_DATA_T as the data type to be stored in the stack structure.
@@ -33,15 +35,19 @@
 #define _STACK_GLUE(x, y) x##y
 #define STACK_GLUE(x, y) _STACK_GLUE(x, y)
 
+#define STACK_ALLOW_SHRINK true
+#define STACK_NO_SHRINK false
+
 typedef struct _stack_t {
     float current_load_factor;             // Load factor
     size_t number_of_items_in_table;       // Number of actual items currently in the internal array
     size_t array_size;                     // Size of the internal array
     size_t min_array_size;
+    bool allow_shrink;
     char *table;                           // Internal array
 } _stack_t;
 
-bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size);
+bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size, bool allow_shrink);
 bool __stack_clear(_stack_t *stack, size_t element_size);
 bool __stack_is_empty(_stack_t *stack);
 void __stack_destroy(_stack_t **stack);
@@ -65,17 +71,20 @@ size_t __stack_get_num_elements(_stack_t *stack);
 #endif
 
 #define __STACK_T STACK_GLUE(STACK_DATA_NAME, _stack_t)
+// MAINTAINERS NOTE: Keep this the same as the _stack_t struct
 typedef struct __STACK_T {
     float current_load_factor;             // Load factor
-    unsigned int number_of_items_in_table; // Number of actual items currently in the internal array
-    unsigned int array_size;               // Size of the internal array
+    size_t number_of_items_in_table; // Number of actual items currently in the internal array
+    size_t array_size;               // Size of the internal array
+    size_t min_array_size;
+    bool allow_shrink;
     STACK_DATA_T *table;                   // Internal array
 } __STACK_T;
 
 // Function prototypes
-static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_init)(__STACK_T **stack, size_t initial_size)
+static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_init)(__STACK_T **stack, size_t initial_size, bool allow_shrink)
 {
-    return __stack_init((_stack_t**)stack, sizeof(STACK_DATA_T), initial_size);
+    return __stack_init((_stack_t**)stack, sizeof(STACK_DATA_T), initial_size, allow_shrink);
 }
 
 static inline bool STACK_GLUE(STACK_DATA_NAME, _stack_clear)(__STACK_T *stack)
