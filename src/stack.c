@@ -8,6 +8,8 @@
  * 2023-03-18: Change status return to use false
  *             for the "no error" success condition
  *             and true for "error"
+ * 2023-04-01: Add init param to prevent automatic
+ *             shrinking of the internal array
  * 
  * USAGE: see stack.h
  */
@@ -28,9 +30,13 @@ static bool _stack_half_stack(_stack_t *stack, size_t element_size);
  * @param **stack Pointer to the stack
  * @param element_size [internal use] Size of element stored in stack
  * @param initial_size Number of elements to store initially
+ * @param allow_shrink Set to true to allow the stack's internal array
+ *                     to shrink automatically if enough items are popped
+ *                     off. Set to false to disable shrinking (it will
+ *                     only grow).
  * @return false on success, true on failure (memory allocation failure)
  */
-bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size)
+bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size, bool allow_shrink)
 {
     *stack = malloc(sizeof(**stack));
     if (!*stack) {
@@ -45,6 +51,7 @@ bool __stack_init(_stack_t **stack, size_t element_size, size_t initial_size)
     (*stack)->number_of_items_in_table = 0;
     (*stack)->array_size = initial_size;
     (*stack)->min_array_size = initial_size;
+    (*stack)->allow_shrink = allow_shrink;
     return false;
 }
 
@@ -335,8 +342,10 @@ static bool _stack_double_stack(_stack_t *stack, size_t element_size)
  */
 static bool _stack_half_stack(_stack_t *stack, size_t element_size)
 {
-    if (stack->array_size < 2 * stack->min_array_size ||
+    if (!stack->allow_shrink ||
+        stack->array_size < 2 * stack->min_array_size ||
         _stack_get_load_factor(stack) > STACK_DEFAULT_LOAD_FACTOR - STACK_DEFAULT_MAX_NEGATIVE_LOAD_FACTOR_VARIANCE) {
+        
         return false;
     }
     char *tmp  = realloc(stack->table, sizeof(char) * element_size * stack->array_size / 2);
