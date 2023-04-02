@@ -6,6 +6,7 @@
  * 2023-03-03: Created
  * 2023-03-19: Fix sefgault on NULL *help_func
  * 2023-04-01: Add arg/flag table print (opt_help())
+ * 2023-04-01: Add "Option Section Header"s
  */
 
 #include <stdio.h>
@@ -17,6 +18,7 @@
 
 char *option_type_strs[] = {
     "EOL",
+    "\0",
     "\0",
     "\0",
     "bool",
@@ -58,6 +60,7 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                 (entry->full_name != NULL && strcmp(*argv, long_buf) == 0)) {
 
                 switch (entry->type) {
+                case OPT_SECT_HDR:
                 case OPT_EOL:
                     break;
                     
@@ -190,6 +193,13 @@ void opt_help(option_entry_t *entries)
     // Now actually print out the flags/args
     for (entry = entries; entry->type != OPT_EOL; ++entry) {
 
+        // Check for section headers
+        if (entry->type == OPT_SECT_HDR) {
+            printf("\n=== %s ===\n", entry->flag_description);
+            continue;
+        }
+        
+        
         // Print short flag
         if (entry->short_name != '\0') {
             printf(" -%c", entry->short_name);

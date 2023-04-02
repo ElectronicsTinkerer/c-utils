@@ -5,6 +5,7 @@
  * Updates:
  * 2023-03-03: Created
  * 2023-04-01: Add arg/flag table print (opt_help())
+ * 2023-04-01: Add "Option Section Header"s
  */
 
 #ifndef OPTION_PARSE_H
@@ -16,6 +17,7 @@
 // Keep in sync with the option_type_strs (option-parse.c)
 typedef enum option_type_t {
     OPT_EOL,   // End of list
+    OPT_SECT_HDR,
     OPT_TRUE,  // Set var to true if flag exists
     OPT_FALSE, // Set var to false if flag exists
     OPT_BOOL,
@@ -35,6 +37,7 @@ typedef struct option_entry_t {
 } option_entry_t;
 
 #define OPTION_END_LIST {'\0', "", OPT_EOL, NULL, NULL}
+#define OPTION_SECTION_HEADER(name) {'\0', "", OPT_SECT_HDR, NULL, (name)}
 
 bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_func)());
 void opt_help(option_entry_t *entries);
