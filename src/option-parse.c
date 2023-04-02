@@ -7,6 +7,7 @@
  * 2023-03-19: Fix sefgault on NULL *help_func
  * 2023-04-01: Add arg/flag table print (opt_help())
  * 2023-04-01: Add "Option Section Header"s
+ * 2023-04-01: Added check for unknown option flag
  */
 
 #include <stdio.h>
@@ -35,10 +36,13 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
     option_entry_t *entry;
     char long_buf[OPTION_BUF_LEN] = "--";
     char short_buf[3] = "-_"; // '_' to be replaced in below loop
+    bool flag_exists;
+    bool encountered_error = false;
     
     while (*argc > 0) {
 
         // Loop over the different options available
+        flag_exists = false;
         for (entry = entries; entry->type != OPT_EOL; ++entry) {
 
             // Check for help
@@ -58,6 +62,8 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
 
             if ((entry->short_name != '\0' && strcmp(*argv, short_buf) == 0) ||
                 (entry->full_name != NULL && strcmp(*argv, long_buf) == 0)) {
+
+                flag_exists = true;
 
                 switch (entry->type) {
                 case OPT_SECT_HDR:
@@ -130,11 +136,17 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                 }
             }
         }
+
+        if (!flag_exists) {
+            printf("Option error: '%s' (unknown)\n", *argv);
+            encountered_error = true;
+        }
         
         --*argc;
         ++argv;
     }
-    return true;
+
+    return !encountered_error;
 }
 
 /**
