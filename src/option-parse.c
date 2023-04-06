@@ -8,6 +8,7 @@
  * 2023-04-01: Add arg/flag table print (opt_help())
  * 2023-04-01: Add "Option Section Header"s
  * 2023-04-01: Added check for unknown option flag
+ * 2023-04-06: Fix long filename check in parse_args
  */
 
 #include <stdio.h>
@@ -61,7 +62,7 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
             strcpy(long_buf+2, entry->full_name);
 
             if ((entry->short_name != '\0' && strcmp(*argv, short_buf) == 0) ||
-                (entry->full_name != NULL && strcmp(*argv, long_buf) == 0)) {
+                (entry->full_name[0] != '\0' && strcmp(*argv, long_buf) == 0)) {
 
                 flag_exists = true;
 
