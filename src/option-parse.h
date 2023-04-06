@@ -6,10 +6,13 @@
  * 2023-03-03: Created
  * 2023-04-01: Add arg/flag table print (opt_help())
  * 2023-04-01: Add "Option Section Header"s
+ * 2023-04-06: Add stdbool header include
  */
 
 #ifndef OPTION_PARSE_H
 #define OPTION_PARSE_H
+
+#include <stdbool.h>
 
 #define OPTION_MAX_LEN 32
 #define OPTION_BUF_LEN (OPTION_MAX_LEN + 2)
