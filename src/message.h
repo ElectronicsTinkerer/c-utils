@@ -10,6 +10,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <unistd.h>
+
 typedef enum msg_kind_t {
     M_ERRR = 0,
     M_WARN,

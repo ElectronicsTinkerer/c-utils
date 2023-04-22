@@ -448,12 +448,13 @@ ht_key_t __ht_hash_string(const char *string)
         // http://www.cse.yorku.ca/~oz/hash.html
         // Apparently has "better distribution of the keys"
         int c;
+        int l = strlen(string);
         ht_key_t hash = 0;
         while ((c = *string++))
         {
             hash += c + (hash << 6) + (hash << 16) - hash;
         }
-        return hash;
+        return hash;// + l;
     }
     return 0;
 }
