@@ -56,6 +56,11 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                 }
                 return false;
             }
+
+            // Check for "--" since this will terminate option parsing
+            if (strcmp(*argv, "--") == 0) {
+                return true;
+            }
             
             // Create the short and long argument string to compare agains
             short_buf[1] = entry->short_name;
