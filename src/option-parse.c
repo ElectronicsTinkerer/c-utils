@@ -85,6 +85,10 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                     break;
                     
                 case OPT_BOOL:
+                    if (*argc == 1) {
+                        printf("Missing argument to '%s'\n", *argv);
+                        return false;
+                    }
                     if (strcmp(*(argv+1), "true") == 0 ||
                         strcmp(*(argv+1), "yes") == 0) {
                         
@@ -105,6 +109,10 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                     break;
                     
                 case OPT_INT:
+                    if (*argc == 1) {
+                        printf("Missing argument to '%s'\n", *argv);
+                        return false;
+                    }
                     np_err = string_to_int(entry->data_ptr, *(argv+1), 10);
                     if (np_err != NP_SUCCESS) {
                         np_perr(np_err);
@@ -116,6 +124,10 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                     break;
                     
                 case OPT_UINT:
+                    if (*argc == 1) {
+                        printf("Missing argument to '%s'\n", *argv);
+                        return false;
+                    }
                     np_err = string_to_uint(entry->data_ptr, *(argv+1), 10);
                     if (np_err != NP_SUCCESS) {
                         np_perr(np_err);
@@ -129,6 +141,10 @@ bool parse_args(option_entry_t *entries, int *argc, char *argv[], void (*help_fu
                 case OPT_FILENAME:
                 case OPT_DIR:
                 case OPT_STR:
+                    if (*argc == 1) {
+                        printf("Missing argument to '%s'\n", *argv);
+                        return false;
+                    }
                     --*argc;
                     ++argv;
                     // NOTE: this does not check if the string is an argument ("-xx")
