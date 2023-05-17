@@ -13,6 +13,8 @@
 
 #include "message.h"
 
+msg_level_t msg_level;
+
 /**
  * Print a message
  * 
@@ -41,6 +43,9 @@ int pmsg(msg_kind_t type, const char *file_name, ssize_t linenum, const char *fm
         len += vfprintf(stderr, fmt, args);
         break;
     case M_WARN:
+        if (msg_level < ML_WARN) {
+            break;
+        }
         len += fprintf(stdout, "\x1b[1;33;40m[WARN]\x1b[0m ");
         if (file_name) {
             len += fprintf(stdout, "'%s' ", file_name);
@@ -51,6 +56,9 @@ int pmsg(msg_kind_t type, const char *file_name, ssize_t linenum, const char *fm
         len += vfprintf(stdout, fmt, args);
         break;
     case M_INFO:
+        if (msg_level < ML_INFO) {
+            break;
+        }
         len += fprintf(stdout, "\x1b[1;36;40m[INFO]\x1b[0m ");
         if (file_name) {
             len += fprintf(stdout, "'%s' ", file_name);
@@ -61,6 +69,9 @@ int pmsg(msg_kind_t type, const char *file_name, ssize_t linenum, const char *fm
         len += vfprintf(stdout, fmt, args);
         break;
     case M_DBUG:
+        if (msg_level < ML_DBUG) {
+            break;
+        }
         len += fprintf(stdout, "\x1b[1;35;40m[DBUG]\x1b[0m ");
         if (file_name) {
             len += fprintf(stdout, "'%s' ", file_name);

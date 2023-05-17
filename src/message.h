@@ -12,6 +12,18 @@
 
 #include <unistd.h>
 
+// Does not need to be in sync with msg_kind_t
+typedef enum msg_level_t {
+    ML_MINIMUM = 0,
+    ML_ERRR = 0,
+    ML_WARN,
+    ML_INFO,
+    ML_DBUG,
+    ML_MAXIMUM
+} msg_level_t;
+
+#define ML_DEFAULT ML_INFO
+
 typedef enum msg_kind_t {
     M_ERRR = 0,
     M_WARN,
