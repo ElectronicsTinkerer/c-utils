@@ -274,7 +274,7 @@ bool __stack_rot(_stack_t *stack, size_t element_size)
 bool __stack_push(_stack_t *stack, size_t element_size, void *element)
 {
     stack->number_of_items_in_table += 1;
-    if (!_stack_double_stack(stack, element_size)) {
+    if (_stack_double_stack(stack, element_size)) {
         stack->number_of_items_in_table -= 1;
         return true;
     }
