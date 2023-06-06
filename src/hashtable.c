@@ -87,25 +87,30 @@ void __ht_clear(ht_t *table)
 /**
  * Add an element to the hashtable
  * Assumes that you have already malloc()'d the value pointer
+ * and that you have already mallov()'d the item pointer
+ * (NIA - No Item Allocation)
+ *
+ * @note This function is for INTERNAL USE ONLY and should not
+ *       be called from external sources.
+ * @note On error or duplicate entry, the item is free()'d if not null
  * 
  * @param table The HashTable to be operated upon
  * @param key The key associated with the provided value
  * @param value The value to be associated with the key
+ * @param item The hashtable entry item to use
  * @return true on failure, false on success
  */
-bool __ht_put(ht_t *table, ht_key_t key, void *value)
+bool __ht_put_nia(ht_t *table, ht_key_t key, void *value, ht_entry_t *item)
 {
     if (table == NULL) {
+        if (item) {
+            free(item);
+        }
         return true;
     }
 
     ht_index_t pointer = _ht_compute_index(table, key);
-
-    ht_entry_t *item = malloc(sizeof(*item));
-    if (!item) {
-        return true;
-    }
-        
+            
     item->next = NULL;
     item->value = value;
     item->key = key;
@@ -142,7 +147,9 @@ bool __ht_put(ht_t *table, ht_key_t key, void *value)
             else if (item->key == node->key) // Item is the same as the node
             {
                 node->value = item->value;
-                free(item);
+                if (item) {
+                    free(item);
+                }
                 table->numberOfItemsInTable--; // Cancel out addition at end of function
                 done = 1;
             }
@@ -160,6 +167,30 @@ bool __ht_put(ht_t *table, ht_key_t key, void *value)
         _ht_double_table(table);
     }
     return false; // Success
+}
+
+
+/**
+ * Add an element to the hashtable
+ * Assumes that you have already malloc()'d the value pointer
+ * 
+ * @param table The HashTable to be operated upon
+ * @param key The key associated with the provided value
+ * @param value The value to be associated with the key
+ * @return true on failure, false on success
+ */
+bool __ht_put(ht_t *table, ht_key_t key, void *value)
+{
+    if (table == NULL) {
+        return true;
+    }
+
+    ht_entry_t *item = malloc(sizeof(*item));
+    if (!item) {
+        return true;
+    }
+
+    return __ht_put_nia(table, key, value, item);
 }
 
 
@@ -539,8 +570,7 @@ static void _ht_double_table(ht_t *table)
         while (__ht_iterator_has_next(itr))
         {
             ht_entry_t *node = __ht_iterator_next(itr);
-            __ht_put(table, node->key, node->value);
-            free(node);
+            __ht_put_nia(table, node->key, node->value, node);
         }
 
         // Free the old table
@@ -579,13 +609,8 @@ static void _ht_half_table(ht_t *table)
         // Loop through all the values in the original table, rehashing them into the new one
         while (__ht_iterator_has_next(itr))
         {
-            // TODO: Refactor this so that a the old nodes
-            // are not reallocated everytime the HT changes
-            // size. Would need an internal version of the
-            // __ht_put() function.
             ht_entry_t *node = __ht_iterator_next(itr);
-            __ht_put(table, node->key, node->value);
-            free(node);
+            __ht_put_nia(table, node->key, node->value, node);
         }
 
         // Free the old table
