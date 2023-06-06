@@ -75,6 +75,7 @@ typedef struct ht_itr_t
 // Function Prototypes
 bool __ht_init(ht_t **table);
 void __ht_clear(ht_t *table);
+bool __ht_put_nia(ht_t *table, ht_key_t key, void *value, ht_entry_t *item); // Assumes item has already been allocated
 bool __ht_put(ht_t *table, ht_key_t key, void *value);
 bool __ht_sput(ht_t *table, char *key, void *value);
 void *__ht_get(ht_t *table, ht_key_t key);
