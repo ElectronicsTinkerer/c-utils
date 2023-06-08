@@ -11,6 +11,8 @@
  * 2023-03-18: Refactor to add type checking for all 
  *             functions
  * 2023-03-18: Add return status value to put() and sput()
+ * 2023-06-06: Remove reallocation of every item during
+ *             table resize (added __ht_put_nia())
  */
 
 #define __HT_HT_C
