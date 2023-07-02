@@ -13,6 +13,8 @@
  * 2023-03-18: Add return status value to put() and sput()
  * 2023-06-06: Remove reallocation of every item during
  *             table resize (added __ht_put_nia())
+ * 2023-07-02: Use ht_index_t in init() and clear() instead
+ *             of int for iteration index
  */
 
 #define __HT_HT_C
@@ -52,7 +54,7 @@ bool __ht_init(ht_t **table)
         return true;    // Unable to malloc memory
     }
     
-    for (int i = 0; i < (*table)->arraySize; i++) {
+    for (ht_index_t i = 0; i < (*table)->arraySize; i++) {
         (*table)->table[i] = NULL;
     }
     return false;
@@ -70,7 +72,7 @@ void __ht_clear(ht_t *table)
     if (table != NULL)
     {
         // Free the elements in the table
-        for (int i = 0; i < table->arraySize; i++)
+        for (ht_index_t i = 0; i < table->arraySize; i++)
         {
             if (table->table[i])
             {
