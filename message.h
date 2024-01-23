@@ -1,8 +1,5 @@
 /**
- * SLIME assembler
- * An improved HEIPA assembler replacement written in C
- * 
- * Message printer
+ * Message printer (pulled from the SLIME assembler src)
  * 
  * (C) Ray Clemens 2023
  */
