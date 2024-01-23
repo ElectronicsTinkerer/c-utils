@@ -4,8 +4,8 @@
  * (C) Ray Clemens 2023
  */
 
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
 typedef enum msg_kind_t {
     M_ERRR = 0,
