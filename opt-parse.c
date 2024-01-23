@@ -9,14 +9,15 @@
  * 2023-04-01: Add "Option Section Header"s
  * 2023-04-01: Added check for unknown option flag
  * 2023-04-06: Fix long filename check in parse_args
+ * 2024-01-23: Rename option-parser -> opt-parse
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 
-#include "option-parse.h"
-#include "numberparser.h"
+#include "opt-parse.h"
+#include "num-parse.h"
 
 char *option_type_strs[] = {
     "EOL",

@@ -6,9 +6,10 @@
  * 2020-10-??: Originally written for GSG V0
  * 2023-03-03: Update formating and add number base
  *             argument to int and uint parsers
+ * 2024-01-23: Rename numberparser -> num-parse
  */
 
-#include "numberparser.h"
+#include "num-parse.h"
 
 
 /**
